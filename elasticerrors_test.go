@@ -10,13 +10,14 @@ import (
 func Test_AddFind(t *testing.T) {
 	ast := assert.New(t)
 	var esError = &ElasticError{
-		Code:           ErrorCode(1),
-		Message:        "",
-		HTTPStatusCode: http.StatusOK,
+		code:           ErrorCode(1),
+		message:        "",
+		httpStatusCode: http.StatusOK,
 	}
-	defaultGroup.Add(esError)
+	group := NewErrorGroup()
+	group.Add(esError)
 
-	err := defaultGroup.FindError(esError.Code)
+	err := group.FindError(esError.code)
 	ast.NotNil(err)
 	ast.Equal(esError, err)
 }
@@ -24,13 +25,14 @@ func Test_AddFind(t *testing.T) {
 func Test_CopyOnce(t *testing.T) {
 	ast := assert.New(t)
 	var esError = &ElasticError{
-		Code:           ErrorCode(1),
-		Message:        "",
-		HTTPStatusCode: http.StatusOK,
+		code:           ErrorCode(1),
+		message:        "",
+		httpStatusCode: http.StatusOK,
 	}
-	defaultGroup.Add(esError)
+	group := NewErrorGroup()
+	group.Add(esError)
 
-	err := defaultGroup.FindError(esError.Code)
+	err := group.FindError(esError.code)
 	err1 := err.SetCode(ErrorCode(2))
 	err2 := err1.SetMessage("ss")
 	err3 := err2.SetHTTPStatusCode(http.StatusAccepted)
@@ -42,14 +44,15 @@ func Test_CopyOnce(t *testing.T) {
 func Test_UndefiendeCode(t *testing.T) {
 	ast := assert.New(t)
 	var esError = &ElasticError{
-		Code:           ErrorCode(1),
-		Message:        "",
-		HTTPStatusCode: http.StatusOK,
+		code:           ErrorCode(1),
+		message:        "",
+		httpStatusCode: http.StatusOK,
 	}
-	defaultGroup.Add(esError)
+	group := NewErrorGroup()
+	group.Add(esError)
 
 	var f assert.PanicTestFunc = func() {
-		defaultGroup.FindError(ErrorCode(2))
+		group.FindError(ErrorCode(2))
 		return
 	}
 	ast.Panics(f)
@@ -58,13 +61,14 @@ func Test_UndefiendeCode(t *testing.T) {
 func Test_CodeConflict(t *testing.T) {
 	ast := assert.New(t)
 	var esError = &ElasticError{
-		Code:           ErrorCode(1),
-		Message:        "",
-		HTTPStatusCode: http.StatusOK,
+		code:           ErrorCode(1),
+		message:        "",
+		httpStatusCode: http.StatusOK,
 	}
-	defaultGroup.Add(esError)
+	group := NewErrorGroup()
+	group.Add(esError)
 	var f assert.PanicTestFunc = func() {
-		defaultGroup.Add(esError)
+		group.Add(esError)
 		return
 	}
 	ast.Panics(f)

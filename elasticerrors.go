@@ -10,9 +10,9 @@ type ErrorCode int
 
 // ElasticError 弹性错误
 type ElasticError struct {
-	Code           ErrorCode
-	Message        string
-	HTTPStatusCode int
+	code           ErrorCode
+	message        string
+	httpStatusCode int
 
 	// 是否为拷贝
 	isCopy bool
@@ -27,9 +27,9 @@ func NewElasticError(code ErrorCode, message string, httpStatusCode ...int) *Ela
 		httpCode = httpStatusCode[0]
 	}
 	return &ElasticError{
-		Code:           code,
-		Message:        message,
-		HTTPStatusCode: httpCode,
+		code:           code,
+		message:        message,
+		httpStatusCode: httpCode,
 	}
 }
 
@@ -38,9 +38,9 @@ func (e *ElasticError) copy() *ElasticError {
 		return e
 	}
 	n := &ElasticError{
-		Code:           e.Code,
-		Message:        e.Message,
-		HTTPStatusCode: e.HTTPStatusCode,
+		code:           e.code,
+		message:        e.message,
+		httpStatusCode: e.httpStatusCode,
 		isCopy:         true,
 	}
 	return n
@@ -49,29 +49,44 @@ func (e *ElasticError) copy() *ElasticError {
 // SetMessage 修改错误描述
 func (e *ElasticError) SetMessage(msg string) *ElasticError {
 	e = e.copy()
-	e.Message = msg
+	e.message = msg
 	return e
 }
 
 // AppendMessage 添加错误描述
 func (e *ElasticError) AppendMessage(msg string) *ElasticError {
 	e = e.copy()
-	e.Message = fmt.Sprintf("%s %s", e.Message, msg)
+	e.message = fmt.Sprintf("%s %s", e.message, msg)
 	return e
+}
+
+// Error 实现 error接口
+func (e *ElasticError) Error() string {
+	return e.message
 }
 
 // SetCode 修改错误码
 func (e *ElasticError) SetCode(code ErrorCode) *ElasticError {
 	e = e.copy()
-	e.Code = code
+	e.code = code
 	return e
+}
+
+// Code 返回错误码
+func (e *ElasticError) Code() int {
+	return int(e.code)
 }
 
 // SetHTTPStatusCode 修改HTTP响应码
 func (e *ElasticError) SetHTTPStatusCode(code int) *ElasticError {
 	e = e.copy()
-	e.HTTPStatusCode = code
+	e.httpStatusCode = code
 	return e
+}
+
+// HTTPStatusCode 返回HTTP错误码
+func (e *ElasticError) HTTPStatusCode() int {
+	return e.httpStatusCode
 }
 
 // ErrorGroup 错误组
@@ -88,14 +103,14 @@ func NewErrorGroup() *ErrorGroup {
 
 // Add 添加错误
 func (g *ErrorGroup) Add(esError *ElasticError) {
-	if tmpError, exist := g.errorMap[esError.Code]; exist {
-		var msg = fmt.Sprintf("ErrorCode %d has been added to the group, details: %+v", int(esError.Code), tmpError)
+	if tmpError, exist := g.errorMap[esError.code]; exist {
+		var msg = fmt.Sprintf("ErrorCode %d has been added to the group, details: %+v", int(esError.code), tmpError)
 		panic(msg)
 	}
-	if esError.HTTPStatusCode == 0 {
-		esError.HTTPStatusCode = http.StatusOK
+	if esError.httpStatusCode == 0 {
+		esError.httpStatusCode = http.StatusOK
 	}
-	g.errorMap[esError.Code] = esError
+	g.errorMap[esError.code] = esError
 	return
 }
 
